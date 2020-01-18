@@ -1,15 +1,8 @@
 package start;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import analyzer.CSSAnalyzer;
 import analyzer.FileAnalyzer;
-import creator.CSSCreator;
 import logger.Logger;
-import memento.Load;
-import models.MyTable;
 import psql.Connector;
 
 public class Start {
@@ -31,32 +24,21 @@ public class Start {
 			
 			//Phase 1
 			Connector connector = new Connector(args[0]);
+			connector.start();
 			
 			CSSAnalyzer cssAnalyzer = new CSSAnalyzer();
 			Thread cssAT = new Thread(cssAnalyzer);
 
 			cssAT.start();
 			
-			
 			try {
 				cssAT.join();
 				
-				
-				String[] tab = Load.load();
-				
-				List<MyTable> tabs = new ArrayList<>();
-				
-				for(String s : tab) {
-					tabs.add(new MyTable(s));
-				}	
-				
-				//Load einfach im FileAnalyzer ausführen und parameter entfernen!
-				
 				if(args.length == 2) {
-					FileAnalyzer fileAnalyzer = new FileAnalyzer(cssAnalyzer.getFileArray(), tabs, Double.parseDouble(args[1]));
+					FileAnalyzer fileAnalyzer = new FileAnalyzer(Double.parseDouble(args[1]));
 					fileAnalyzer.analyze();					
 				}else {
-					FileAnalyzer fileAnalyzer = new FileAnalyzer(cssAnalyzer.getFileArray(), tabs);
+					FileAnalyzer fileAnalyzer = new FileAnalyzer();
 					fileAnalyzer.analyze();	
 				}
 			
@@ -71,20 +53,12 @@ public class Start {
 			Logger.log("It is recommended, to use high percentage.");
 			Logger.log("Could cause bad results, if your using low percentage!");
 			Logger.log("Using Jaro Winkler Similarity for this option.");
-
-
 		}
-		
-		
 		else {
-
 			Logger.log("Parameters not correct.");
 			Logger.log("Try something like: java -jar CSSCreator.jar database.txt");
 		}
-		
-		
-		
-		
+
 		/**
 		 * TODO
 		 * 

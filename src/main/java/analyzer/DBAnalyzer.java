@@ -7,9 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import logger.Logger;
-import memento.Safe;
 import models.MyTable;
 import psql.PostgreConnection;
+import storage.StorageAdmin;
+import storage.StorageAdminInterface;
 
 public class DBAnalyzer {
 	
@@ -59,8 +60,9 @@ public class DBAnalyzer {
 				Logger.log("Added " + counter + " tables.");
 				counter++;
 				}
-			
-			Safe.safe(this.tables);
+
+			this.storeData();
+
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -68,6 +70,17 @@ public class DBAnalyzer {
 		}
 		
 		return true;
+	}
+
+	public void storeData(){
+		StorageAdminInterface sa = new StorageAdmin();
+		List<String> tableNames = new ArrayList<>();
+
+		for(MyTable t : this.tables){
+			tableNames.add(t.getTableName());
+		}
+
+		sa.storeList(tableNames, StorageAdminInterface.TABLE_NAMES, true);
 	}
 	
 	public List<MyTable> tables(){

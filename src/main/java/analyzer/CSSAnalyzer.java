@@ -19,6 +19,8 @@ import org.w3c.css.sac.InputSource;
 import creator.CSSCreator;
 import git.GitProvider;
 import logger.Logger;
+import storage.StorageAdmin;
+import storage.StorageAdminInterface;
 
 public class CSSAnalyzer implements CSSAnalyzeInterface, Runnable{
 
@@ -67,6 +69,8 @@ public class CSSAnalyzer implements CSSAnalyzeInterface, Runnable{
 				Logger.log(f.getName());
 			}
 
+			this.storeDate();
+
 		} catch (IOException e) {
 			e.printStackTrace();
 			Logger.log("FAIL: Getting file paths..");
@@ -74,6 +78,18 @@ public class CSSAnalyzer implements CSSAnalyzeInterface, Runnable{
 		}
 		Logger.log("Loaded all files. (" + files.size() + " files)");
 		Logger.log("**********************************");
+	}
+
+	public void storeDate() {
+
+		StorageAdminInterface sa = new StorageAdmin();
+		List<String> s = new ArrayList<>();
+
+		for(File f : this.files){
+			s.add(f.getName());
+		}
+
+		sa.storeList(s, StorageAdminInterface.CSS_FILES, true);
 	}
 
 	/**

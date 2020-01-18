@@ -29,6 +29,10 @@ public class Connector{
 		 * 
 		 */
 
+		this.argument = argument;
+	}
+
+	public void start(){
 		this.readDatabaseConfig(argument);
 	}
 	
