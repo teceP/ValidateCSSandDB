@@ -10,6 +10,7 @@ public interface StorageAdminInterface {
     //Filenames
     String TABLE_NAMES = "tablenames";
     String CSS_FILES = "cssfiles";
+    String OSM_STYLES_FOLDER_PREFIX = "osm-styles/css/";
 
     public void storeList(List<String> list, String file, boolean artifact);
 

@@ -43,8 +43,9 @@ public class FileAnalyzer {
             File temp;
 
             for(int i = 0; i < filesRestored.size()-1; i++){
-                temp = new File(filesRestored.get(i));
+                temp = new File(StorageAdminInterface.OSM_STYLES_FOLDER_PREFIX + filesRestored.get(i));
                 files[i] = temp;
+                Logger.log("Reloaded file from storage: " + temp.getName());
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -55,8 +56,8 @@ public class FileAnalyzer {
 	 * Loads tables from artifact folder.
 	 */
 	public void loadTables() {
-
         StorageAdminInterface sa = new StorageAdmin();
+        tables = new ArrayList<>();
 
         try {
             List<String> tabs = sa.restoreList(StorageAdminInterface.TABLE_NAMES, true);
@@ -202,11 +203,19 @@ public class FileAnalyzer {
         return accordances;
     }
 
+    /**
+     *
+     * checks accordance betw. cssclass and tablename
+     */
     public void analyze() {
 
         Logger.log("Start analyzing files ...");
 
         List<List<Found>> found = new ArrayList<>();
+
+        /**
+         * Lieber pro file machen, doppeltliste vermeiden
+         */
 
         for (File f : files) {
             found.add(this.scanFile(f, CSSIdentifier.CLASSNAME));
