@@ -1,32 +1,42 @@
 package enumerations;
 
 /**
- * Contains several important CSS identifiers/rules
- * @author Mario
+ * Contains several CSS identifiers/rules
+ *
+ * You can use this in the FileAnalyzer, to scan the files for this identifiers.
+ *
+ * @author Mario Teklic
  *
  */
 public enum CSSIdentifier {
-	
-	//Its important to let these whitespaces in the enums, because other methods will directly start to scan for the class/type/... value
 
 	/*
 	 * TODO:
 	 * Should add identifiers like "... and type in ..." to get more precise results
+	 * If you add new identifiers, you also need to scan for them.
+	 * For this you need the checkForMatches()-method, which calls the scanFile(...) method.
+	 * Both methods are in the FileAnalyzer.
+	 *
 	 */
 
-	/**
-	 * CSS Rules:
-	 */
+
 	CLASSNAME("[class = '"),
 	TYPE("[type = '"),
 	AND_TYPE_IN("and type in");
-	
+
+	/**
+	 * Identifier
+	 */
 	private String identifier;
 
 	CSSIdentifier(String identifier) {
 		this.identifier = identifier;
 	}
 
+	/**
+	 * Returns the identifier
+	 * @return
+	 */
 	public String getString() {
 		return this.identifier;
 	}

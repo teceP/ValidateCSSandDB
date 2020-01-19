@@ -1,8 +1,6 @@
 package git;
 
 import java.io.File;
-import java.nio.file.Paths;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;

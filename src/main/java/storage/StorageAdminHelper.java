@@ -3,7 +3,6 @@ package storage;
 import models.CssClass;
 import models.Match;
 import models.MyTable;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

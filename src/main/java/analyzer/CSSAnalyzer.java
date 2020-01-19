@@ -1,11 +1,7 @@
 package analyzer;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,17 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import org.w3c.css.sac.InputSource;
-
-
-import creator.CSSCreator;
 import git.GitProvider;
 import logger.Logger;
 import storage.StorageAdmin;
 import storage.StorageAdminInterface;
 
-public class CSSAnalyzer implements CSSAnalyzeInterface, Runnable {
+public class CSSAnalyzer implements Runnable {
 
     /**
      * GITHUB Cloned folder. NOT css style folder!
@@ -40,6 +31,10 @@ public class CSSAnalyzer implements CSSAnalyzeInterface, Runnable {
      */
     private List<File> files;
 
+    /**
+     * Runs the GitProvider, which will download the latest git repo with css-styles.
+     * Will collect all CSS Files and store it to the artifact folder.
+     */
     public CSSAnalyzer() {
         files = new ArrayList<File>();
         this.stylesFolder = "osm-styles";

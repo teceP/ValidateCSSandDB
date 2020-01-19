@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import logger.Logger;
 import models.MyTable;
 import psql.PostgreConnection;
@@ -13,26 +12,56 @@ import storage.StorageAdmin;
 import storage.StorageAdminInterface;
 
 public class DBAnalyzer {
-	
+
+	/**
+	 * PostgreConnection
+	 */
 	private PostgreConnection connection;
+
+	/**
+	 * List of database tables
+	 */
 	private List<MyTable> tables;
-	
+
+	/**
+	 * DatasetMeta of database
+	 */
 	private DatabaseMetaData md;
+
+	/**
+	 * ResultSet for the tables of the given database
+	 */
 	private ResultSet rsTables;
+
+	/**
+	 * ResultSet for the columns of a specific table, in a given database
+	 */
 	private ResultSet rsColumns;
-	
-	private int counter;
-	
+
+	/**
+	 * Analyzes the database for tables and column of these tables.
+	 * Stores informations in the artifact folder.
+	 *
+	 * @param connection
+	 */
 	public DBAnalyzer(PostgreConnection connection) {
 		this.connection = connection;
 		this.tables = new ArrayList<MyTable>();
-		counter = 1;
 	}
 
 	public void start() {
 		this.getTables();
 	}
-	
+
+	/**
+	 * Collects all tables from the database under a specific schema.
+	 * Schema was set in the databaseconfig file, which will be anaylized after the
+	 * program starts.
+	 *
+	 * Databaseconfigfile = first parameter/argument
+	 *
+	 * @return
+	 */
 	private boolean getTables() {
 		Logger.log("**************************************");
 		Logger.log("Getting tablenames and colomnnames...");
@@ -57,14 +86,12 @@ public class DBAnalyzer {
 				}
 				
 				this.tables.add(tempTable);
-				Logger.log("Added " + counter + " tables.");
-				counter++;
+				Logger.log("Added " + this.tables.size() + " tables.");
 				}
 
 			this.storeData();
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -72,6 +99,15 @@ public class DBAnalyzer {
 		return true;
 	}
 
+	/**
+	 * Converts the tableslist, to a list of strings, just with the name of the tables.
+	 * Calls the StorageAdmin, to store this data.
+	 *
+	 * TODO
+	 * Collect also the column names.
+	 * Use the StorageAdminHelper and implement in this class a new helpermethod.
+	 *
+	 */
 	public void storeData(){
 		StorageAdminInterface sa = new StorageAdmin();
 		List<String> tableNames = new ArrayList<>();
@@ -82,8 +118,5 @@ public class DBAnalyzer {
 
 		sa.storeList(tableNames, StorageAdminInterface.TABLE_NAMES, true);
 	}
-	
-	public List<MyTable> tables(){
-		return this.tables;
-	}
+
 }
