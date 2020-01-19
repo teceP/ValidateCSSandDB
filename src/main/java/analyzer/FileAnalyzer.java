@@ -5,81 +5,136 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import enumerations.CSSIdentifier;
 import logger.Logger;
-import models.Accordance;
-import models.Found;
+import models.Match;
+import models.CssClass;
 import models.MyTable;
 import storage.StorageAdmin;
 import storage.StorageAdminInterface;
 
 public class FileAnalyzer {
 
-    private File[] files;
+    /**
+     * CSS files
+     */
+    private File[] cssFiles;
+
+    /**
+     * How much a accordance has to be, if method is using
+     * JarowWinkler method.
+     * <p>
+     * Used in checkAccordanceWithPercentage(..., percentage)-method.
+     */
     private Double percentage;
+
+    /**
+     * All percentages of the matches are added in here.
+     * Use this for the logger, to store die percentage accuracy of this run.
+     *
+     * completePercentage/matches.size()
+     */
+    private double completePercentage;
+
+    /**
+     * Renderingdatabasetables of the OHDM database/your database.
+     */
     private List<MyTable> tables;
 
-    public FileAnalyzer() {
-        this.loadTables();
-        this.loadFiles();
-    }
+    /**
+     * A list of CssClass objects, which contains informations about the
+     * classname, length, position in css file
+     */
+    private List<CssClass> cssClasses;
 
-	public FileAnalyzer(double percentage) {
+    /*
+     * A list of Strings, which represent css-file-names, which has no classes inside.
+     *
+     * Info: A css file dont needs seperate classes.
+     * If it has no class in it, the filename can be used as a classname.
+     */
+    private List<String> cssFilesWithoutClasses;
+
+    /**
+     * All matches, which where found in the checkMatch Method will be stored in this list.
+     * A match always contains a CSSFile/CSSClass and a database tablename.
+     *
+     * It contains also a String called suggestion, which represents the suggest, what
+     * the CssFile / CssClass should be named, in order to be useable for the rendering
+     * in the geoserver. The name should match the database table/or column name.
+     */
+    private List<Match> allMatches;
+
+
+    /**
+     * Can analyze CSSFiles for there classes and compare this classes,
+     * to database tablenames (further implementation: database columnnames).
+     *
+     * Founded matches will be stored in the artifact folder. Filename: matches
+     *
+     */
+    public FileAnalyzer(double percentage) {
+        this.cssClasses = new ArrayList<>();
+        this.cssFilesWithoutClasses = new ArrayList<>();
+
+        //Load ohdm tables, which where anaylized earlier
         this.loadTables();
+
+        //Load cssfile(names), which where analyzed earlier
         this.loadFiles();
+
+        //set percentage parameter for later called accurance methode
         this.percentage = percentage;
     }
 
-    public void loadFiles(){
+    /**
+     * Loads osm-style CSS-Filenames from the downloaded github-Repository of osm-styles by geosolutions.
+     * For more informations, look in the GitProvider class.
+     */
+    public void loadFiles() {
         StorageAdminInterface sa = new StorageAdmin();
 
-        try {
-            List<String> filesRestored = sa.restoreList(StorageAdminInterface.CSS_FILES, true);
-            this.files = new File[filesRestored.size()];
-            File temp;
+        List<String> filesRestored = sa.restoreList(StorageAdminInterface.CSS_FILES, true);
+        this.cssFiles = new File[filesRestored.size()];
+        File temp;
 
-            for(int i = 0; i < filesRestored.size()-1; i++){
-                temp = new File(StorageAdminInterface.OSM_STYLES_FOLDER_PREFIX + filesRestored.get(i));
-                files[i] = temp;
-                Logger.log("Reloaded file from storage: " + temp.getName());
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-	/**
-	 * Loads tables from artifact folder.
-	 */
-	public void loadTables() {
-        StorageAdminInterface sa = new StorageAdmin();
-        tables = new ArrayList<>();
-
-        try {
-            List<String> tabs = sa.restoreList(StorageAdminInterface.TABLE_NAMES, true);
-            MyTable temp;
-            for(String s : tabs){
-            	temp = new MyTable(s);
-            	this.tables.add(temp);
-			}
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        for (int i = 0; i < filesRestored.size(); i++) {
+            temp = new File(StorageAdminInterface.OSM_STYLES_FOLDER_PREFIX + filesRestored.get(i));
+            cssFiles[i] = temp;
+            Logger.log("Reloaded file from storage: " + temp.getName());
         }
     }
 
     /**
-     * Searches for a given CSS identifier in a given CSS file.
-     *
-     * @param File file
-     * @return A list of Found-Objects, which contains the css-file name, the first character index, the length of the classname, which was found in a given CSS file.
+     * Loads tables from artifact folder.
      */
-    public List<Found> scanFile(File file, CSSIdentifier identifier) {
+    public void loadTables() {
+        StorageAdminInterface sa = new StorageAdmin();
+        tables = new ArrayList<>();
+
+        List<String> tabs = sa.restoreList(StorageAdminInterface.TABLE_NAMES, true);
+        MyTable temp;
+        for (String s : tabs) {
+            temp = new MyTable(s);
+            this.tables.add(temp);
+        }
+    }
+
+    /**
+     * Searches for a given CSS identifier/rule, in a given CSS file.
+     *
+     * @param file file
+     * @return A list of Found-Objects, which contains the css-file name,
+     * the first character index, the length of the classname, which was found in a given CSS file.
+     */
+    public void scanFile(File file, CSSIdentifier identifier) {
         Logger.log("Scanning file '" + file.getName() + "' for " + identifier.toString() + " - CSS identifier.");
-        List<Found> found = new ArrayList<Found>();
+
+        List<CssClass> tempCssClass = new ArrayList<>();
 
         try {
             FileReader fr = new FileReader(file);
@@ -95,7 +150,7 @@ public class FileAnalyzer {
 
                 if (line.contains(identifier.getString())) {
 
-                    //Needs / because of apostrophe
+                    //Needs \ because of apostrophe
                     while (temp != '\'') {
                         firstIndexColumn++;
                         temp = line.charAt(firstIndexColumn);
@@ -112,8 +167,9 @@ public class FileAnalyzer {
 
                     className = line.substring(firstIndexColumn, lastIndexColumn);
 
-                    Found f = new Found(file, className, indexRow, firstIndexColumn, lastIndexColumn);
-                    found.add(f);
+                    CssClass f = new CssClass(file, className, indexRow, firstIndexColumn, lastIndexColumn);
+
+                    tempCssClass.add(f);
 
                     Logger.log("Found: " + f.getName() + " at row " + indexRow + " at column from " + firstIndexColumn + " to " + lastIndexColumn + ".");
 
@@ -126,9 +182,15 @@ public class FileAnalyzer {
                 indexRow++;
             }
 
-            if (found.size() != 0) {
-                Logger.log("Found " + found.size() + " classes.");
+            Logger.log("Found " + tempCssClass.size() + " classes.");
+
+            if (tempCssClass.size() > 0) {
+                this.cssClasses.addAll(tempCssClass);
+                Logger.log("This class will be added to 'cssnames'-artifact, in order to be able for later methods.");
+            } else if (tempCssClass.size() == 0) {
+                this.cssFilesWithoutClasses.add(file.getName());
             }
+
         } catch (FileNotFoundException e) {
             //Should never happen, expect user deleted files manually.
             Logger.log("FAIL: File not exist. Should definatally exist." + System.lineSeparator() + "Make sure no process deletes any files from 'osm-styles' folder.");
@@ -137,8 +199,6 @@ public class FileAnalyzer {
             Logger.log("IOException - while trying to search a file for a given key. - Check BufferedReader operations.");
             e.printStackTrace();
         }
-
-        return found;
     }
 
 
@@ -146,94 +206,137 @@ public class FileAnalyzer {
      * Checks if there are any accordances between the given css class
      * and a database table name.
      * <p>
-     * Use this method, if program is runned without '-p' parameter
+     * Use this method, if program is runned without a second parameter.
      *
      * @param cssClass
      * @return Null if there are no accordances.
      */
-    public List<Accordance> checkAccordance(File file, String cssClass, List<MyTable> tableNames) {
-        List<Accordance> accordances = new ArrayList<>();
+    public Match checkForMatch(CssClass cssClass, MyTable table, String cssFile) {
 
-        Logger.log("Scan file '" + file.getName() + "' for accordances.");
-        Logger.log("Accordances will be displayed like:" + System.lineSeparator() + "identifier_from_css_file - tablename");
-
-        for (MyTable current : tableNames) {
-            if (cssClass.equals(current)) {
-                accordances.add(new Accordance(file, cssClass, current.getTableName()));
-                Logger.log("Found new accordance: " + cssClass + " - " + current.getTableName());
-            }
-        }
-        return accordances;
-    }
-
-    /**
-     * Checks if there are any accordances between the given css class
-     * and a database table name.
-     * <p>
-     * Use this method, if program is runned with a second parameter behind the database configs liks:
-     * java -jar thistool.jar database.txt 87.231
-     * <p>
-     * Uses Apache Commons Lang 3 library.
-     *
-     * @param cssClass
-     * @return Null if there are no accordances.
-     */
-    public List<Accordance> checkAccordanceWithPercentage(File file, String cssClass, List<MyTable> tableNames, double minPercentage) {
-        List<Accordance> accordances = new ArrayList<>();
         JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
-        //-1 to = never been set by JaroWinkerMethod
-        double actualPercentage = -1;
-        double allPercentages = 0;
+        Match match = null;
+        CssClass temp = null;
+        double actualPercentage = 0;
 
-        Logger.log("Scan file '" + file.getName() + "' for accordances with min. percantage: " + minPercentage + ".");
-        Logger.log("Accordances will be displayed like:" + System.lineSeparator() + "identifier_from_css_file - tablename with xx %");
+        // if no match => check for contains and then for "contains_point"||contains_polygon"...
 
-        for (MyTable current : tableNames) {
-            actualPercentage = jws.apply(cssClass, current.getTableName());
+        //herausfinden, ab wann nur noch _point, _line oder _polygon fehlt (% bis zu 100)
+        //ab dieser % zahl dann _line, _point oder _polygon hinzufügen
+        //=>> weiter: speichern, wie die datei heißen soll , in object match
 
-            if (actualPercentage >= minPercentage) {
-                accordances.add(new Accordance(file, cssClass, current.getTableName(), actualPercentage));
-                allPercentages += actualPercentage;
-                Logger.log("Found new accordance: " + cssClass + " - " + current.getTableName() + " with " + actualPercentage + " %.");
+        DecimalFormat df = new DecimalFormat("#.##");
+
+        if (cssFile == null) {
+            actualPercentage = jws.apply(cssClass.getName(), table.getTableName()) * 100;
+            Logger.log("CSSClass: " + cssClass.getName() + " ~ Tablename: " + table.getTableName() + " -> Percentage = " + df.format(actualPercentage));
+
+            if (actualPercentage >= this.percentage.doubleValue()) {
+                match = new Match(cssClass, table, false, null);
+            }
+
+        } else if (cssFile != null) {
+            actualPercentage = jws.apply(cssFile, table.getTableName()) * 100;
+            Logger.log("CSSFile: " + cssFile + " ~ Tablename: " + table.getTableName() + " -> Percentage = " + df.format(actualPercentage));
+
+            if (actualPercentage >= this.percentage.doubleValue()) {
+                //Remove ".css" from filename
+                cssFile = cssFile.substring(0, cssFile.length() - 4);
+                temp = new CssClass(new File(cssFile), cssFile, -1, -1, -1);
+                match = new Match(temp, table, true, null);
             }
         }
 
-        Logger.log("Found " + accordances.size() + " accordances in this file."
-                + System.lineSeparator() + "Average percentage: " + allPercentages / accordances.size() + ".");
-        return accordances;
+        this.completePercentage += actualPercentage;
+
+        return match;
     }
 
     /**
-     *
-     * checks accordance betw. cssclass and tablename
+     * Calls the checkAccordance or checkAccordanceWithPercentage- methods
+     * depending on how many parameters where given at the programstart,
+     * for each rendering database table.
+     * <p>
+     * Database tables are listed and stored in artifact/table_names.
      */
-    public void analyze() {
+    public void searchForMatches() {
 
-        Logger.log("Start analyzing files ...");
+        Logger.log("Start search for matching CSS Classes and OHDM DB tablenames ...");
+        Logger.log("****************************************************************");
 
-        List<List<Found>> found = new ArrayList<>();
-
-        /**
-         * Lieber pro file machen, doppeltliste vermeiden
+        /*
+         * TODO:
+         *
+         * Here is the perfect point, to scan the css files for any rule specified in die
+         * CSSIdentifier Class.
+         *
+         * CSSIdentifier is a Enum class.
+         *
+         * You can define rules in this class like I did it for the CLASSNAME.
+         *
+         * A rule is a specified String.
+         * The method scanFile(File, Rule), scans in a give (CSS)-File, for your rule.
+         *
+         * To get better results, it is helpful to implement more rules.
+         *
          */
 
-        for (File f : files) {
-            found.add(this.scanFile(f, CSSIdentifier.CLASSNAME));
+        this.allMatches = new ArrayList<>();
+        Match tempMatch;
+
+        for (File f : this.cssFiles) {
+            this.scanFile(f, CSSIdentifier.CLASSNAME);
         }
 
-        if (this.percentage == null) {
+        this.storeCssClasses();
 
-            for (List<Found> f : found) {
-                for (Found ff : f) {
-                    this.checkAccordance(ff.getFile(), ff.getName(), this.tables);
+
+        //For each table, check all CSSClasses:
+        for (MyTable table : this.tables) {
+
+            Logger.log("Check for matches with, for table: '" + table.getTableName() + "'");
+
+            for (CssClass cssClass : cssClasses) {
+                //this.checkAccordance()
+                if ((tempMatch = this.checkForMatch(cssClass, table, null)) != null) {
+                    this.allMatches.add(tempMatch);
+                    Logger.log("Matches with: '" + cssClass.getName() + "' (class).");
                 }
             }
-        } else {
-            for (List<Found> f : found) {
-                for (Found ff : f) {
-                    this.checkAccordanceWithPercentage(ff.getFile(), ff.getName(), this.tables, this.percentage);
+
+            for (String css : cssFilesWithoutClasses) {
+                //this.checkAccordance()
+                if ((tempMatch = this.checkForMatch(null, table, css)) != null) {
+                    this.allMatches.add(tempMatch);
+                    Logger.log("Matches with: '" + css + "' (file).");
                 }
             }
         }
+
+        if (this.allMatches.size() > 0) {
+            Logger.log("All matches had an average percentage accuracy of " + completePercentage / allMatches.size() + "%.");
+        } else{
+            Logger.log("There were no match found.");
+        }
+
+        this.storeMatches();
+    }
+
+    /**
+     * Stores CSS Classes and CSS File names (when no class was found in a file),
+     * in the artifact folder.
+     */
+    public void storeCssClasses() {
+        StorageAdminInterface sa = new StorageAdmin();
+        sa.storeList(sa.cssClassToString(this.cssClasses), StorageAdminInterface.CSS_CLASSES, true);
+        sa.storeList(this.cssFilesWithoutClasses, StorageAdminInterface.CSS_FILES_WITHOUT_CLASSES, true);
+    }
+
+    /**
+     * Stores matches, in the artifact folder.
+     */
+    public void storeMatches() {
+        StorageAdminInterface sa = new StorageAdmin();
+        System.out.println("Size of Matchlist: " + this.allMatches.size());
+        sa.storeList(sa.matchesToString(this.allMatches), StorageAdminInterface.MATCHES, true);
     }
 }

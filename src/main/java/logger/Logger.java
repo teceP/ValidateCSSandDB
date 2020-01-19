@@ -33,7 +33,7 @@ public final class Logger {
 		}
 
 		//Get the current date and time
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 	   	Calendar cal = Calendar.getInstance();
 	   	
 	   	//Create the name of the file from the path and current time
@@ -45,7 +45,7 @@ public final class Logger {
 				System.err.println("INFO: Creating new log file");	
 			}
 		}catch(IOException e){
-			System.err.println("ERROR: Cannot create log file");
+			System.err.println("ERROR: Cannot create log file: " + e.getMessage());
 			System.exit(1);
 		}
 	}

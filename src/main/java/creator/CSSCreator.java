@@ -2,13 +2,13 @@ package creator;
 
 import java.io.File;
 
-import models.Accordance;
+import models.Match;
 
 public class CSSCreator implements Runnable {
 	
-	private Accordance[] accordances;
+	private Match[] accordances;
 	
-	public CSSCreator(Accordance[] accordances) {
+	public CSSCreator(Match[] accordances) {
 		File folder = new File("output");
 		folder.mkdir();
 		

@@ -2,7 +2,7 @@ package models;
 
 import java.io.File;
 
-public class Found {
+public class CssClass {
 	
 	/**
 	 * File which where operated in.
@@ -34,7 +34,7 @@ public class Found {
 	 */
 	private int length;
 	
-	public Found(File file, String name, int characterIndexRow, int characterIndexColumn, int length) {
+	public CssClass(File file, String name, int characterIndexRow, int characterIndexColumn, int length) {
 		this.file = file;
 		this.name = name;
 		this.characterIndexRow = characterIndexRow;

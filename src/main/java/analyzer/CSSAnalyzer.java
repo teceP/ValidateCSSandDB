@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.w3c.css.sac.InputSource;
 
 
@@ -22,95 +23,95 @@ import logger.Logger;
 import storage.StorageAdmin;
 import storage.StorageAdminInterface;
 
-public class CSSAnalyzer implements CSSAnalyzeInterface, Runnable{
+public class CSSAnalyzer implements CSSAnalyzeInterface, Runnable {
 
-	/**
-	 * GITHUB Cloned folder. NOT css style folder!
-	 */
-	private String stylesFolder;
-	
-	/**
-	 * Css style folder. Cloned from Github.
-	 */
-	private String cssFolder;
-	
-	/**
-	 * All css files/paths which are in the "osm-styles" folder are safed in this list.
-	 */
-	private List<File> files;
+    /**
+     * GITHUB Cloned folder. NOT css style folder!
+     */
+    private String stylesFolder;
 
-	public CSSAnalyzer() {	
-		files = new ArrayList<File>();
-		this.stylesFolder = "osm-styles";
-		this.cssFolder = "osm-styles/css";
-	}
+    /**
+     * Css style folder. Cloned from Github.
+     */
+    private String cssFolder;
 
+    /**
+     * All css files/paths which are in the "osm-styles" folder are safed in this list.
+     */
+    private List<File> files;
 
-	private void downloadFiles() {
-		GitProvider git = new GitProvider(stylesFolder);
-		
-		if(git.getData()) {
-			this.getFiles();
-		}else {
-			Logger.log("Could not download css styles. Exit program.");
-		}
-	}
+    public CSSAnalyzer() {
+        files = new ArrayList<File>();
+        this.stylesFolder = "osm-styles";
+        this.cssFolder = "osm-styles/css";
+    }
 
-	private void getFiles() {
-		Logger.log("*******************************");
-		Logger.log("Start getting CSS files from folder '" + cssFolder + "'.");
-		Logger.log("*******************************");
+    /**
+     * Runs the GitProvider.
+     */
+    private boolean downloadFiles() {
 
-		try (Stream<Path> path = Files.walk(Paths.get(cssFolder))) {
+        File osmStyles = new File("osm-styles");
+        if (osmStyles.exists()) {
+        	Logger.log("Git repo only exists on your machine. Delte 'osm-styles'-folder, in order to auto-download the newest styles." + System.lineSeparator() + "Program uses old styles and continues now.");
+            return true;
+        } else {
+            GitProvider git = new GitProvider(stylesFolder);
 
-			this.files = path.filter(Files::isRegularFile).map(x -> new File(x.toString())).collect(Collectors.toList());
+            if (git.getData()) {
+                this.getFiles();
+            } else {
+                Logger.log("Could not download css styles. Exit program.");
+				return false;
+            }
+            return true;
+        }
+    }
 
-			for (File f : this.files) {
-				Logger.log(f.getName());
-			}
+    /**
+     * Collects all CSS files, which where downloaded in a list.
+     */
+    private void getFiles() {
+        Logger.log("*******************************");
+        Logger.log("Start getting CSS files from folder '" + cssFolder + "'.");
+        Logger.log("*******************************");
 
-			this.storeDate();
+        try (Stream<Path> path = Files.walk(Paths.get(cssFolder))) {
 
-		} catch (IOException e) {
-			e.printStackTrace();
-			Logger.log("FAIL: Getting file paths..");
-			Logger.log("*******************************");
-		}
-		Logger.log("Loaded all files. (" + files.size() + " files)");
-		Logger.log("**********************************");
-	}
+            this.files = path.filter(Files::isRegularFile).map(x -> new File(x.toString())).collect(Collectors.toList());
 
-	public void storeDate() {
+            for (File f : this.files) {
+                Logger.log(f.getName());
+            }
 
-		StorageAdminInterface sa = new StorageAdmin();
-		List<String> s = new ArrayList<>();
+            this.storeDate();
 
-		for(File f : this.files){
-			s.add(f.getName());
-		}
+        } catch (IOException e) {
+            e.printStackTrace();
+            Logger.log("FAIL: Getting file paths..");
+            Logger.log("*******************************");
+        }
+        Logger.log("Loaded all files. (" + files.size() + " files)");
+        Logger.log("**********************************");
+    }
 
-		sa.storeList(s, StorageAdminInterface.CSS_FILES, true);
-	}
+    /*
+     * Stores the cssfile-list in an artifact.
+     */
+    public void storeDate() {
 
-	/**
-	 * Creates array out of files.
-	 * 
-	 * @return
-	 */
-	public File[] getFileArray(){
-		//No need to use list anymore, because we dont want to add more file later.
-		
-		File[] fileArray = new File[this.files.size()];
-		
-		for(int i = 0; i < this.files.size(); i++) {
-			fileArray[i] = this.files.get(i);
-		}
-		
-		return fileArray;
-	}
+        StorageAdminInterface sa = new StorageAdmin();
+        List<String> s = new ArrayList<>();
 
-	@Override
-	public void run() {
-		this.downloadFiles();
-	}
+        for (File f : this.files) {
+            s.add(f.getName());
+        }
+
+        sa.storeList(s, StorageAdminInterface.CSS_FILES, true);
+    }
+
+    @Override
+    public void run() {
+        this.downloadFiles();
+    }
 }

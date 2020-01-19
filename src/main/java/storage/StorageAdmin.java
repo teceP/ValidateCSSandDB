@@ -1,16 +1,21 @@
 package storage;
 
 import logger.Logger;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StorageAdmin implements StorageAdminInterface{
-
-    private final String DELIMETER = "#";
+public class StorageAdmin extends StorageAdminHelper implements StorageAdminInterface {
 
 
+    /**
+     * Stores a List of Strings
+     *
+     * @param list The list which you want to store
+     * @param file The filename, which you want to use. Filenamestring stored in StorageAdminInterface.
+     * @param artifact true: will be stored in artifact folder, false: will be stored in mainfolder
+     *
+     */
     @Override
     public void storeList(List<String> list, String file, boolean artifact) {
         StringBuilder sb = new StringBuilder();
@@ -45,18 +50,26 @@ public class StorageAdmin implements StorageAdminInterface{
             pw.flush();
             pw.close();
 
+            Logger.log("*****************************************");
+            Logger.log("New artifact stored: '" + file + "'");
+            Logger.log("*****************************************");
+
         } catch (FileNotFoundException e) {
             Logger.log("File not found while trying to write to a file.");
             e.printStackTrace();
         }
 
-
-
     }
 
-
+    /**
+     * Restores a List of Strings
+     *
+     * @param filename The path of your file, you want to restore
+     * @param artifact true: file is in artifact folder, false: file is in maindir.
+     * @return
+     */
     @Override
-    public List<String> restoreList(String filename, boolean artifact) throws FileNotFoundException{
+    public List<String> restoreList(String filename, boolean artifact){
         try {
 
             if(artifact){
@@ -85,8 +98,5 @@ public class StorageAdmin implements StorageAdminInterface{
         return null;
 
     }
-
-
-
 
 }
