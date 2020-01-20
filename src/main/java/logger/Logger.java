@@ -8,20 +8,47 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public final class Logger {
+
+	/*
+	 * Instance of logger
+	 */
 	private static final Logger instance = new Logger();
-	
+
+	/**
+	 * Name for loggerfile
+	 */
 	public String logname = "Logger";
-	
+
+	/**
+	 * Prefix, which will occure in all logs.
+	 */
 	private static final String PREFIX = "LOG: ";
-	
+
+	/**
+	 * Logfolder will be created in this folder.
+	 * By default, it will use the same directory, where the .jar file was executed.
+	 */
 	protected String env = System.getProperty("user.dir");
+
+	/**
+	 * Logfile
+	 */
 	private static File file;
-	
+
+	/**
+	 * Logger
+	 * @return
+	 */
 	public static Logger getInstance() {
 		instance.createLogFile();
 		return instance;
 	}
-	
+
+	/**
+	 * Creates the logfile.
+	 *
+	 * Will delete logfolder, if its exists.
+	 */
 	public void createLogFile(){
 		//Determine if a logs directory exists or not.
 		File logsFolder = new File(env + '/' + "logs");
@@ -29,7 +56,6 @@ public final class Logger {
 			//Create the directory 
 			System.err.println("INFO: Creating new logs directory in " + env);
 			logsFolder.mkdir();
-			
 		}
 
 		//Get the current date and time
@@ -49,7 +75,12 @@ public final class Logger {
 			System.exit(1);
 		}
 	}
-	
+
+	/**
+	 * Creates a instance of the logger, if there is no logger instance.
+	 *
+	 * Otherwhise, will throw an IllegalStateException, in order to prevent reflection.
+	 */
 	private Logger(){
 		if (instance != null){
 			//Prevent Reflection
@@ -57,7 +88,12 @@ public final class Logger {
 		}
 		this.createLogFile();
 	}
-	
+
+	/**
+	 * Writes a new line into the logfile.
+	 *
+	 * @param message
+	 */
 	public static void log(String message){
 		try{
 			FileWriter out = new FileWriter(Logger.file, true);
@@ -68,6 +104,4 @@ public final class Logger {
 			System.err.println("ERROR: Could not write to log file");
 		}
 	}
-
-
 }

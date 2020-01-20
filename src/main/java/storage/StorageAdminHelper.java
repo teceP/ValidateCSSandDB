@@ -149,7 +149,6 @@ public class StorageAdminHelper{
             //add to list
             strings.add(sb.toString());
         }
-
         return strings;
     }
 
@@ -211,6 +210,5 @@ public class StorageAdminHelper{
 
         }
         return matches;
-
     }
 }

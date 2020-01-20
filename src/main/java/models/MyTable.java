@@ -12,10 +12,21 @@ public class MyTable {
 	 * For further use, maybe also the columns should be safed.
 	 * 
 	 */
-	
+
+	/**
+	 * Name of the databasetable
+	 */
 	private String tableName;
+
+	/**
+	 * Names of the columns in the DB-table
+	 */
 	private List<String> columns;
-	
+
+	/**
+	 * A databasetable with, their columnnames
+	 * @param name
+	 */
 	public MyTable(String name) {
 		this.tableName = name;
 		columns = new ArrayList<String>();

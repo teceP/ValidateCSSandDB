@@ -8,9 +8,21 @@ import org.eclipse.jgit.api.errors.JGitInternalException;
 import logger.Logger;
 
 public class GitProvider {
-	
+
+	/**
+	 * Github repository URL
+	 *
+	 * Change this, to download another repository with CSS styles.
+	 * Make sure, you change the folder name "osm-styles" in the CSSAnalyzer class.
+	 *
+	 */
 	private final String url = "https://github.com/geosolutions-it/osm-styles.git";
-	
+
+	/**
+	 * Downloads the latest geosolution Github repository by default.
+	 *
+	 * @param stylesFolder Destinationfolder of your download
+	 */
 	public GitProvider(String stylesFolder) {
 		File folder = new File(stylesFolder);
 
@@ -20,6 +32,12 @@ public class GitProvider {
 		}
 	}
 
+	/**
+	 * If there exists any folder with the same name of the repo, it will delete all files
+	 * and directorys.
+	 *
+	 * @param folder Repofolder/directory
+	 */
 	private void cleanFolder(File folder) {
 		
 		try {
@@ -31,20 +49,23 @@ public class GitProvider {
 	            subFile.delete();
 	         }
 	      }
-	      folder.delete();	
-			
+	      folder.delete();
 		}catch (StackOverflowError soe) {
 			Logger.log("Stackoverflow while trying to delete old styles folder." + System.lineSeparator() + "Please delete 'osm-styles' manually");
 			System.exit(1);
 		}
 	}
-	
+
+	/**
+	 * Downloads data from git repo.
+	 *
+	 * @return True if repo was downloaded without exceptions.
+	 */
 	public boolean getData() {
 		Logger.log("Cloning Repository '" + url + "' ...");
 		
 		try {
 			Git.cloneRepository().setURI(url).call();
-			
 			Logger.log("Cloning completed.");
 			return true;
 		} catch (GitAPIException e) {
@@ -55,7 +76,6 @@ public class GitProvider {
 			Logger.log("FAIL: Try to delete the folder 'osm-styles' manually.");
 			System.exit(1);
 		}
-		
 		return false;
 	}
 }

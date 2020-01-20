@@ -2,9 +2,6 @@ package storage;
 
 import models.CssClass;
 import models.Match;
-
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
 
 public interface StorageAdminInterface {
@@ -19,7 +16,10 @@ public interface StorageAdminInterface {
      */
     String ATTRIBUT_DELIMETER = "~";
 
-    final String ARTIFACT = "artifact/";
+    /**
+     * Foldername, where all the artifacts will be stored
+     */
+    String ARTIFACT = "artifact/";
 
     //Filenames
     String TABLE_NAMES = "table_names";
@@ -28,6 +28,8 @@ public interface StorageAdminInterface {
     String CSS_CLASSES = "css_classes";
     String CSS_FILES_WITHOUT_CLASSES = "css_without_classes";
     String MATCHES = "matches";
+
+
     public void storeList(List<String> list, String file, boolean artifact);
 
     /**
@@ -37,14 +39,13 @@ public interface StorageAdminInterface {
      * @param filename
      * @return
      */
-    public List<String> restoreList(String filename, boolean artifact);
+    List<String> restoreList(String filename, boolean artifact);
 
+    List<String> cssClassToString(List<CssClass> list);
 
-    public abstract List<String> cssClassToString(List<CssClass> list);
+    List<CssClass> stringToCssClass();
 
-    public abstract List<CssClass> stringToCssClass();
+    List<String> matchesToString(List<Match> list);
 
-    public List<String> matchesToString(List<Match> list);
-
-    public List<Match> stringToMatches();
+    List<Match> stringToMatches();
 }

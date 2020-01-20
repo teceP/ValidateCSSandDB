@@ -9,16 +9,52 @@ import logger.Logger;
 
 
 public class Connector{
+
+	/**
+	 * IP Adresse
+	 */
 	private String server;
+
+	/**
+	 * Connectionport on server
+	 */
 	private int port;
+
+	/**
+	 * Username for database
+	 */
 	private String username;
+
+	/**
+	 * Password for database
+	 */
 	private String password;
+
+	/**
+	 * Databasename
+	 */
 	private String dbname;
+
+	/**
+	 * Database schema
+	 */
 	private String schema;
+
+	/**
+	 * Arguments with all of the database-connection informations.
+	 */
 	private String argument;
-	private final String DELIMETER = ";";	
 
+	/**
+	 * Parameters has to be seperated by a ";"
+	 */
+	private final String DELIMETER = ";";
 
+	/**
+	 * Connects to a postgre database
+	 *
+	 * @param argument Database configs like password, username, etc. Should be provided, when the .jar is executed by the user.
+	 */
 	public Connector(String argument) {
 				
 		/*
@@ -47,25 +83,20 @@ public class Connector{
 				
 		try {
 			BufferedReader br = new BufferedReader(new FileReader(file));
-			
 			String config = "";
 			String temp = "";
 			
 			while((temp = br.readLine()) != null) {
 				config += temp;
 			}
-			
+
 			br.close();
-			
 			this.getDatabaseInfos(config);
-			
 		} catch (FileNotFoundException e) {
 			System.out.println("File not found. Has to be in same directory as the .jar file.");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		
 	}
 	
 	/**
@@ -108,13 +139,9 @@ public class Connector{
 		Logger.log("Schema: " + this.schema);
 		
 		this.connect();
-
 	}
 	
 	private void connect() {
 		PostgreConnection connection = new PostgreConnection(server, port, username, password, dbname, schema);
 	}
-
-
-
 }

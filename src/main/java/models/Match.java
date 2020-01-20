@@ -18,11 +18,16 @@ public class Match {
 	 */
 	private Double percentage;
 
+	/**
+	 * Match was found within a CSS file OR with the name of the CSS file
+	 *
+	 * If true: match was found with the CSS filename
+	 */
 	private boolean isFile;
 
 
 	/**
-	 *
+	 * Represents a match between a tablename and a CSS Class or a CSS File
 	 * @param cssClass
 	 * @param table
 	 */

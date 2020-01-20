@@ -7,7 +7,6 @@ import java.util.List;
 
 public class StorageAdmin extends StorageAdminHelper implements StorageAdminInterface {
 
-
     /**
      * Stores a List of Strings
      *
@@ -58,7 +57,6 @@ public class StorageAdmin extends StorageAdminHelper implements StorageAdminInte
             Logger.log("File not found while trying to write to a file.");
             e.printStackTrace();
         }
-
     }
 
     /**
@@ -96,7 +94,5 @@ public class StorageAdmin extends StorageAdminHelper implements StorageAdminInte
             e.printStackTrace();
         }
         return null;
-
     }
-
 }

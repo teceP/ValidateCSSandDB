@@ -10,18 +10,62 @@ import analyzer.DBAnalyzer;
 import logger.Logger;
 
 public class PostgreConnection {
-		
+
+	/**
+	 * IP Adresse
+	 */
 	private String server;
+
+	/**
+	 * Connectionport on server
+	 */
 	private int port;
+
+	/**
+	 * Username for database
+	 */
 	private String username;
+
+	/**
+	 * Password for database
+	 */
 	private String password;
+
+	/**
+	 * Databasename
+	 */
 	private String dbname;
+
+	/**
+	 * Database schema
+	 */
 	private String schema;
-	
+
+	/**
+	 * Url to the database and with the psql-prefix.
+	 */
 	private String url;
+
+	/**
+	 * Properties of connection
+	 */
 	private Properties props;
+
+	/**
+	 * Databaseconnection
+	 */
 	private Connection connection;
-	
+
+	/**
+	 * Connects to a Postgre Database and searches for Metadata
+	 *
+	 * @param server
+	 * @param port
+	 * @param username
+	 * @param password
+	 * @param db
+	 * @param schema
+	 */
 	public PostgreConnection(String server, int port, String username, String password, String db, String schema) {
 		this.server = server;
 		this.port = port;
@@ -39,11 +83,13 @@ public class PostgreConnection {
 		}
 	}
 
-	
+	/**
+	 * Connects to a database, based on the given databaseinformations
+	 * @return true if connects without any exceptions
+	 */
 	private boolean connect() {
 		
 		Logger.log("Try to connect to server...");
-		
 		url = "jdbc:postgresql://" + server + ":" + port + "/" + dbname;
 		
 		props = new Properties();
@@ -57,12 +103,16 @@ public class PostgreConnection {
 			e.printStackTrace();
 			return false;
 		}
-		
+
 		Logger.log("Connection to '"+ url +"' is established.");
 		Logger.log("Wehre '" + dbname + "' is your database.");
 		return true;
 	}
-	
+
+	/**
+	 * Disconnects
+	 * @return true if no exception occured
+	 */
 	public boolean disconnect() {
 		
 		try {
@@ -75,7 +125,11 @@ public class PostgreConnection {
 		
 		return true;
 	}
-	
+
+	/**
+	 * Loads DatabaseMetaData from the database
+	 * @return databaseMetaData
+	 */
 	public DatabaseMetaData getMetaData() {
 		
 		try {
@@ -85,15 +139,20 @@ public class PostgreConnection {
 			e.printStackTrace();
 			return null;
 		}
-
 	}
-	
-	
+
+	/**
+	 * Returns the databaseschemaname
+	 * @return
+	 */
 	public String getSchema() {
 		return this.schema;
 	}
 
-
+	/**
+	 * Returns the databasename
+	 * @return
+	 */
 	public String getDbName() {
 		return this.dbname;
 	}
