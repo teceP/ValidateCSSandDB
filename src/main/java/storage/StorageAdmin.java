@@ -1,9 +1,12 @@
 package storage;
 
 import logger.Logger;
+import models.MyTable;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class StorageAdmin extends StorageAdminHelper implements StorageAdminInterface {
 
@@ -95,4 +98,45 @@ public class StorageAdmin extends StorageAdminHelper implements StorageAdminInte
         }
         return null;
     }
+
+    public void storeTables(List<MyTable> tables){
+        StringBuilder sb;
+        List<String> list = new ArrayList<>();
+
+        /*   "# table name ~ column + column + column #"
+         *
+         */
+
+        for(MyTable t : tables){
+            sb = new StringBuilder();
+            sb.append(t.getTableName());
+            sb.append(ATTRIBUT_DELIMETER);
+            sb.append(this.columnsToString(t.getColumn()));
+            list.add(sb.toString());
+        }
+
+        this.storeList(list, TABLES, true);
+    }
+
+    public List<MyTable> restoreTables(){
+        List<String> list = this.restoreList(TABLES, true);
+        List<MyTable> restoredTables = new ArrayList<>();
+        MyTable newTable = null;
+
+        // "# table name ~ column + column + column #"
+        String[] restoredContent;
+
+        for(String content : list){
+            newTable = new MyTable("tmp");
+            restoredContent = content.split(ATTRIBUT_DELIMETER);
+
+            newTable.setTablename(restoredContent[0]);
+            newTable.setColumn(this.stringToColumns(restoredContent[1]));
+
+            restoredTables.add(newTable);
+        }
+
+        return restoredTables;
+    }
 }
+

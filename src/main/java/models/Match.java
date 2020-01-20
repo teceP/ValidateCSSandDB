@@ -25,17 +25,23 @@ public class Match {
 	 */
 	private boolean isFile;
 
+	/**
+	 * The created CSSFile should be named like this
+	 */
+	private String suggestedName;
+
 
 	/**
 	 * Represents a match between a tablename and a CSS Class or a CSS File
 	 * @param cssClass
 	 * @param table
 	 */
-	public Match(CssClass cssClass, MyTable table, boolean isFile, Double percentage) {
+	public Match(CssClass cssClass, MyTable table, boolean isFile, Double percentage, String suggestedName) {
 		this.isFile = isFile;
 		this.cssClass = cssClass;
 		this.table = table;
 		this.percentage = percentage;
+		this.suggestedName = suggestedName;
 	}
 
 
@@ -57,5 +63,9 @@ public class Match {
 
 	public boolean isFile() {
 		return isFile;
+	}
+
+	public String getSuggestedName() {
+		return this.suggestedName;
 	}
 }

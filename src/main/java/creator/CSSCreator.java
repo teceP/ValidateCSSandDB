@@ -1,6 +1,7 @@
 package creator;
 
 import java.io.File;
+import java.util.List;
 
 import models.Match;
 
@@ -21,6 +22,12 @@ public class CSSCreator implements Runnable {
 	 * 		 and the StorageAdminHelper-Method: stringToMatch(..)
 	 *
 	 */
+
+	private List<Match> matches;
+
+	public CSSCreator(){
+
+	}
 
 	@Override
 	public void run() {

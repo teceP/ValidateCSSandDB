@@ -41,6 +41,11 @@ public class FileAnalyzer {
     private double completePercentage;
 
     /**
+     * Decimalformat, for output and storages of accuracy-percentage values.
+     */
+    private DecimalFormat df;
+
+    /**
      * Renderingdatabasetables of the OHDM database/your database.
      */
     private List<MyTable> tables;
@@ -78,6 +83,8 @@ public class FileAnalyzer {
      *
      */
     public FileAnalyzer(double percentage) {
+        this.df = new DecimalFormat("#.####");
+        this.completePercentage = 0;
         this.cssClasses = new ArrayList<>();
         this.cssFilesWithoutClasses = new ArrayList<>();
 
@@ -114,14 +121,7 @@ public class FileAnalyzer {
      */
     public void loadTables() {
         StorageAdminInterface sa = new StorageAdmin();
-        tables = new ArrayList<>();
-
-        List<String> tabs = sa.restoreList(StorageAdminInterface.TABLE_NAMES, true);
-        MyTable temp;
-        for (String s : tabs) {
-            temp = new MyTable(s);
-            this.tables.add(temp);
-        }
+        tables = sa.restoreTables();
     }
 
     /**
@@ -201,7 +201,6 @@ public class FileAnalyzer {
         }
     }
 
-
     /**
      * Checks if there are any accordances between the given css class
      * and a database table name.
@@ -217,12 +216,26 @@ public class FileAnalyzer {
         Match match = null;
         CssClass temp = null;
         double actualPercentage = 0;
+        String suggestedName;
 
-        // if no match => check for contains and then for "contains_point"||contains_polygon"...
+        /**
+         * TODO Implement next level comparison
+         *
+         * To avoid massive calculations, the program first compares the words with
+         * the Jarow Winkler similarity algorithm.
+         *
+         * It compares 2 string.
+         * It returns:
+         *  1 = same word
+         *  0 = completly different words
+         *  0.10 ... 0.99
+         *
+         *  When it finds a good accurancy between two words, but doesnt returns
+         *  1, then it trys the JarowWinkler algorithm, while it
+         *  extends the cssclass/filenames with this _points, _lines and _polygons.
+         *
+         */
 
-        //herausfinden, ab wann nur noch _point, _line oder _polygon fehlt (% bis zu 100)
-        //ab dieser % zahl dann _line, _point oder _polygon hinzufügen
-        //=>> weiter: speichern, wie die datei heißen soll , in object match
 
         DecimalFormat df = new DecimalFormat("#.##");
 
@@ -231,7 +244,8 @@ public class FileAnalyzer {
             Logger.log("CSSClass: " + cssClass.getName() + " ~ Tablename: " + table.getTableName() + " -> Percentage = " + df.format(actualPercentage));
 
             if (actualPercentage >= this.percentage.doubleValue()) {
-                match = new Match(cssClass, table, false, null);
+                suggestedName = this.getSuggestionForName(cssClass.getName(), table.getTableName(), actualPercentage);
+                match = new Match(cssClass, table, false, actualPercentage, suggestedName);
             }
 
         } else if (cssFile != null) {
@@ -241,14 +255,88 @@ public class FileAnalyzer {
             if (actualPercentage >= this.percentage.doubleValue()) {
                 //Remove ".css" from filename
                 cssFile = cssFile.substring(0, cssFile.length() - 4);
+                suggestedName = this.getSuggestionForName(cssFile, table.getTableName(), actualPercentage);
                 temp = new CssClass(new File(cssFile), cssFile, -1, -1, -1);
-                match = new Match(temp, table, true, null);
+                match = new Match(temp, table, true, actualPercentage, suggestedName);
             }
         }
 
         this.completePercentage += actualPercentage;
 
         return match;
+    }
+
+    /**
+     * Will provide the "best" name for this CSSclass, in connection to the tablename.
+     *
+     *
+     * @param css
+     * @param table
+     * @return
+     */
+    public String getSuggestionForName(String css, String table, double percentage){
+        JaroWinklerSimilarity jws = new JaroWinklerSimilarity();
+
+        /**
+         * Use this enums, which contains identifier for this method.
+         * OHDM databasetables have normally "extenstions" like _points, _polygons or _lines.
+         */
+        CSSIdentifier.POLYGON.getString();
+        CSSIdentifier.LINE.getString();
+        CSSIdentifier.POINT.getString();
+
+        /**
+         * Easy to add new identifiers:
+         *      you just need to add a new CSSIdentifier in the Enumclass
+         *      and add it to this list.
+         *      It will automatically test for this CSSIdentifier with the JarowWinkler algorithm.
+         *
+         */
+        List<CSSIdentifier> identifiers = new ArrayList<>();
+        identifiers.add(CSSIdentifier.POLYGON);
+        identifiers.add(CSSIdentifier.LINE);
+        identifiers.add(CSSIdentifier.POINT);
+
+        List<Double> percentages = new ArrayList<>();
+
+        /**
+         * apply with identifiers as suffix like:
+         *      highway -> highway_polygons
+         */
+        for(int i = 0; i < identifiers.size(); i++){
+            percentages.add(jws.apply((css + identifiers.get(i).getString()), table));
+            System.out.println((css + identifiers.get(i).getString()) + " new name -> " + jws.apply((css + identifiers.get(i).getString()), table));
+        }
+
+        /**
+         * Get highest:
+         */
+        int highest = -1;
+
+        for(int i = 0; i < percentages.size(); i++){
+            if(percentages.get(i) > percentage){
+                highest = i;
+            }
+        }
+
+        if(highest == -1){
+            return css;
+        } else {
+            Logger.log("New suggestion for CSSClass: " + css + " and Table: " + table + "."
+                    + System.lineSeparator() + "Accuracy would increase by " + (percentages.get(highest) - percentage) + " %.");
+            return (css + identifiers.get(highest));
+        }
+
+        /**
+         * What is a good suffix:
+         *      when the percentage increased when a identifier suffix was added
+         */
+
+
+        /**
+         * Now try to check, if when you do this polygon, line or point as prefix or suffix, maybe the percentage gets higher
+         * or will be 100%
+         */
     }
 
     /**
@@ -313,9 +401,10 @@ public class FileAnalyzer {
         }
 
         if (this.allMatches.size() > 0) {
-            Logger.log("All matches had an average percentage accuracy of " + completePercentage / allMatches.size() + "%.");
+            Logger.log("****************************************************************************");
+            Logger.log("All matches had an average percentage accuracy of " + this.df.format(completePercentage / allMatches.size()) + " %. Size of Matchlist: " + this.allMatches.size() + ".");
         } else{
-            Logger.log("There were no match found.");
+            Logger.log("There were no matches found.");
         }
 
         this.storeMatches();
@@ -336,7 +425,6 @@ public class FileAnalyzer {
      */
     public void storeMatches() {
         StorageAdminInterface sa = new StorageAdmin();
-        System.out.println("Size of Matchlist: " + this.allMatches.size());
         sa.storeList(sa.matchesToString(this.allMatches), StorageAdminInterface.MATCHES, true);
     }
 }

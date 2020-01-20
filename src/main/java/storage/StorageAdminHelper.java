@@ -10,9 +10,13 @@ import java.util.List;
 public class StorageAdminHelper{
 
     /**
-     * Delimeter for Match-object attributes.
+     * Delimeter for inner-object attributes.
+     *
+     * Example: In matches are objects of MyTable stored.
+     * Mytable has objects like a list of string about the columns.
+     * Columns = inner objects
      */
-    private String MATCHES_ATTRIBUTE_DELIMETER ="+";
+    private String INNER_ATTRIBUTE_DELIMETER =">";
 
     /**
      * Converts a list of CssClasses (own Object: CssClass), to a list of Strings
@@ -93,6 +97,38 @@ public class StorageAdminHelper{
     }
 
     /**
+     * Converts a list of columns, to a list of strings
+     * @return
+     */
+    public String columnsToString(List<String> columns){
+
+        StringBuilder sb = new StringBuilder();
+
+        for(String s : columns){
+            sb.append(s);
+            sb.append(INNER_ATTRIBUTE_DELIMETER);
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Converts a string to a list of columns
+     * @return
+     */
+    public List<String> stringToColumns(String content){
+
+        List<String> allColumns = new ArrayList<>();
+        String[] columns = content.split(INNER_ATTRIBUTE_DELIMETER);
+
+        for(String s : columns){
+            allColumns.add(s);
+        }
+
+        return allColumns;
+    }
+
+    /**
      * Converts a list of objects, type Match, to a String, which can be stored by the StorageAdmin.
      *
      * @param list of Matches
@@ -112,6 +148,7 @@ public class StorageAdminHelper{
              * 2. MyTable
              * 3. boolean isFile as 0/1
              * 4. double percentage
+             * 5. String suggestedName
              */
             List<CssClass> css = new ArrayList<>();
             css.add(m.getCssClass());
@@ -120,31 +157,34 @@ public class StorageAdminHelper{
             //Could be null, if Match is based on a css file, not on a css class
             if(m.getCssClass() != null){
                 sb.append(cssClass.get(0));
-                sb.append(MATCHES_ATTRIBUTE_DELIMETER);
+                sb.append(INNER_ATTRIBUTE_DELIMETER);
             }else{
                 sb.append("null");
-                sb.append(MATCHES_ATTRIBUTE_DELIMETER);
+                sb.append(INNER_ATTRIBUTE_DELIMETER);
             }
 
             sb.append(m.getTableName());
-            sb.append(MATCHES_ATTRIBUTE_DELIMETER);
+            sb.append(INNER_ATTRIBUTE_DELIMETER);
 
             if(m.isFile()){
                 sb.append(1);
-                sb.append(MATCHES_ATTRIBUTE_DELIMETER);
+                sb.append(INNER_ATTRIBUTE_DELIMETER);
             }else{
                 sb.append(0);
-                sb.append(MATCHES_ATTRIBUTE_DELIMETER);
+                sb.append(INNER_ATTRIBUTE_DELIMETER);
             }
 
             if(m.getPercentage() != null)
             {
                 sb.append(m.getPercentage());
-                sb.append(MATCHES_ATTRIBUTE_DELIMETER);
+                sb.append(INNER_ATTRIBUTE_DELIMETER);
             }else{
                 sb.append("null");
-                sb.append(MATCHES_ATTRIBUTE_DELIMETER);
+                sb.append(INNER_ATTRIBUTE_DELIMETER);
             }
+
+            sb.append(m.getSuggestedName());
+            sb.append(INNER_ATTRIBUTE_DELIMETER);
 
             //add to list
             strings.add(sb.toString());
@@ -173,16 +213,18 @@ public class StorageAdminHelper{
              * 2. MyTable
              * 3. boolean isFile as 0/1
              * 4. double percentage
+             * 5. String suggestedName
              */
             CssClass cssClass;
             MyTable myTable;
             boolean isFile;
             Double percentage;
+            String suggestedName;
 
             if(attributes[0].equals("null")){
                 cssClass = null;
             }else{
-                String[] cssAttributes = attributes[0].split(MATCHES_ATTRIBUTE_DELIMETER);
+                String[] cssAttributes = attributes[0].split(INNER_ATTRIBUTE_DELIMETER);
                 cssClass = new CssClass(new File(attributes[1]),
                         attributes[0],
                         Integer.parseInt(attributes[3]),
@@ -204,7 +246,9 @@ public class StorageAdminHelper{
                 percentage = Double.parseDouble(attributes[3]);
             }
 
-            match = new Match(cssClass,myTable,isFile,percentage);
+            suggestedName = attributes[4];
+
+            match = new Match(cssClass,myTable,isFile,percentage, suggestedName);
 
             matches.add(match);
 

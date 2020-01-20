@@ -19,10 +19,12 @@ public enum CSSIdentifier {
 	 *
 	 */
 
-
 	CLASSNAME("[class = '"),
 	TYPE("[type = '"),
-	AND_TYPE_IN("and type in");
+	AND_TYPE_IN("and type in"),
+	POLYGON("_polygons"),
+	LINE("_lines"),
+	POINT("_points");
 
 	/**
 	 * Identifier

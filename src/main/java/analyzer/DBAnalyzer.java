@@ -110,13 +110,6 @@ public class DBAnalyzer {
 	 */
 	public void storeData(){
 		StorageAdminInterface sa = new StorageAdmin();
-		List<String> tableNames = new ArrayList<>();
-
-		for(MyTable t : this.tables){
-			tableNames.add(t.getTableName());
-		}
-
-		sa.storeList(tableNames, StorageAdminInterface.TABLE_NAMES, true);
+		sa.storeTables(this.tables);
 	}
-
 }

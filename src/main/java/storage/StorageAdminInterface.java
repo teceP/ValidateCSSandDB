@@ -2,6 +2,8 @@ package storage;
 
 import models.CssClass;
 import models.Match;
+import models.MyTable;
+
 import java.util.List;
 
 public interface StorageAdminInterface {
@@ -22,7 +24,7 @@ public interface StorageAdminInterface {
     String ARTIFACT = "artifact/";
 
     //Filenames
-    String TABLE_NAMES = "table_names";
+    String TABLES = "tables";
     String CSS_FILES = "css_files";
     String OSM_STYLES_FOLDER_PREFIX = "osm-styles/css/";
     String CSS_CLASSES = "css_classes";
@@ -48,4 +50,8 @@ public interface StorageAdminInterface {
     List<String> matchesToString(List<Match> list);
 
     List<Match> stringToMatches();
+
+    public void storeTables(List<MyTable> tables);
+
+    public List<MyTable> restoreTables();
 }
