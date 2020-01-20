@@ -286,6 +286,11 @@ public class FileAnalyzer {
         CSSIdentifier.POINT.getString();
 
         /**
+         * Change to singular, as in the ohdm database, names are singular
+         */
+        css = this.modifyPluralToSingular(css);
+
+        /**
          * Easy to add new identifiers:
          *      you just need to add a new CSSIdentifier in the Enumclass
          *      and add it to this list.
@@ -304,17 +309,27 @@ public class FileAnalyzer {
          *      highway -> highway_polygons
          */
         for(int i = 0; i < identifiers.size(); i++){
-            percentages.add(jws.apply((css + identifiers.get(i).getString()), table));
-            System.out.println((css + identifiers.get(i).getString()) + " new name -> " + jws.apply((css + identifiers.get(i).getString()), table));
+            percentages.add((jws.apply((css + identifiers.get(i).getString()), table))*100);
         }
 
         /**
          * Get highest:
          */
-        int highest = -1;
+        int highest = 0;
+
+        /**
+         * TODO
+         *
+         *
+         *
+         *
+         *
+         * hier wird immer _lines_polygon_point passen
+         * lösung (eventuell) => im file nach einer der 3 suchen
+         */
 
         for(int i = 0; i < percentages.size(); i++){
-            if(percentages.get(i) > percentage){
+            if(percentages.get(i).doubleValue() > percentage && percentages.get(i).doubleValue() > percentages.get(highest).doubleValue()){
                 highest = i;
             }
         }
@@ -322,9 +337,12 @@ public class FileAnalyzer {
         if(highest == -1){
             return css;
         } else {
-            Logger.log("New suggestion for CSSClass: " + css + " and Table: " + table + "."
-                    + System.lineSeparator() + "Accuracy would increase by " + (percentages.get(highest) - percentage) + " %.");
-            return (css + identifiers.get(highest));
+            Logger.log("New suggestion for CSSClass (" + css + ") and Table (" + table + ")."
+                    + System.lineSeparator() + "    ~> Accuracy would increase by "
+                    + df.format(percentages.get(highest) - percentage)
+                    + "% to " + df.format(percentages.get(highest)) + "%.");
+
+            return (css + identifiers.get(highest).getString());
         }
 
         /**
@@ -332,11 +350,18 @@ public class FileAnalyzer {
          *      when the percentage increased when a identifier suffix was added
          */
 
+    }
 
-        /**
-         * Now try to check, if when you do this polygon, line or point as prefix or suffix, maybe the percentage gets higher
-         * or will be 100%
-         */
+    /**
+     * Modifys a string, from plural to singular
+     * @param css plural string
+     * @return singular string
+     */
+    public String modifyPluralToSingular(String css) {
+        if(css.charAt(css.length()-1) == 's'){
+            css = css.substring(0, css.length()-1);
+        }
+        return css;
     }
 
     /**
